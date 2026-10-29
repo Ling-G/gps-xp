@@ -1,0 +1,18 @@
+plugins { id 'com.android.application' }
+android {
+    namespace 'io.github.gpsxp'
+    compileSdk 36
+    defaultConfig {
+        applicationId 'io.github.gpsxp'
+        minSdk 26
+        targetSdk 35
+        versionCode 1
+        versionName '1.0.0'
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    buildTypes { release { minifyEnabled false } }
+}
+dependencies { compileOnly files('libs/xposed-api-82.jar') }
