@@ -14,6 +14,11 @@ $dex = Join-Path $out 'dex'
 $tools = Join-Path $Sdk "build-tools\$BuildTools"
 $android = Join-Path $Sdk "platforms\$Platform\android.jar"
 $api = Join-Path $project 'app\libs\xposed-api-82.jar'
+$appGradle = Get-Content (Join-Path $project 'app\build.gradle') -Raw
+if ($appGradle -notmatch 'versionCode\s+(\d+)') { throw 'versionCode missing from app/build.gradle' }
+$versionCode = $matches[1]
+if ($appGradle -notmatch "versionName\s+'([^']+)'") { throw 'versionName missing from app/build.gradle' }
+$versionName = $matches[1]
 function Run([string]$exe, [string[]]$arguments) {
     & $exe @arguments
     if ($LASTEXITCODE -ne 0) { throw "Build failed: $exe ($LASTEXITCODE)" }
@@ -31,7 +36,7 @@ $manifest = Join-Path $out 'AndroidManifest.xml'
 $xml = (Get-Content (Join-Path $project 'app\src\main\AndroidManifest.xml') -Raw).Replace('<manifest ', '<manifest package="io.github.gpsxp" ')
 [IO.File]::WriteAllText($manifest,$xml,[Text.UTF8Encoding]::new($false))
 $unsigned = Join-Path $out 'unsigned.apk'
-Run (Join-Path $tools 'aapt2.exe') @('link','-I',$android,'--manifest',$manifest,'--min-sdk-version','26','--target-sdk-version','35','--version-code','1','--version-name','1.0.0','-A',(Join-Path $project 'app\src\main\assets'),'-o',$unsigned)
+Run (Join-Path $tools 'aapt2.exe') @('link','-I',$android,'--manifest',$manifest,'--min-sdk-version','26','--target-sdk-version','35','--version-code',$versionCode,'--version-name',$versionName,'-A',(Join-Path $project 'app\src\main\assets'),'-o',$unsigned)
 Run (Join-Path $Jdk 'bin\jar.exe') @('uf',$unsigned,'-C',$dex,'classes.dex')
 $aligned = Join-Path $out 'aligned.apk'
 Run (Join-Path $tools 'zipalign.exe') @('-f','4',$unsigned,$aligned)

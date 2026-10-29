@@ -38,7 +38,7 @@ public final class MainActivity extends Activity {
             latitude.setText(Double.toString(Coordinates.DEFAULT_LATITUDE)); save();
         });
         TextView note = new TextView(this);
-        note.setText("\n默认经度：121.42404117992659\n默认纬度：29.66665962827546\n\n支持 Android LocationManager 常用接口。需授予目标应用定位权限。设置页可以打开，不代表模块已经激活。\n模拟生成的 Location 保留模拟位置标记。独立地图 SDK、基站、Wi-Fi 和 IP 定位不保证生效。");
+        note.setText("\n默认经度：121.42404117992659\n默认纬度：29.66665962827546\n\n支持 Android LocationManager 常用接口。需授予目标应用定位权限。设置页可以打开，不代表模块已经激活。\n启用时，作用域应用读取到的模拟位置标记为关闭。独立地图 SDK、基站、Wi-Fi 和 IP 定位不保证生效。");
         box.addView(note);
     }
     private EditText field(LinearLayout box, String label) {

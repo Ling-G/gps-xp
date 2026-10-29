@@ -52,6 +52,8 @@ public final class LocationHook implements IXposedHookLoadPackage {
         });
         hookGetter("getLatitude", true);
         hookGetter("getLongitude", false);
+        hookMockFlag("isFromMockProvider");
+        hookMockFlag("isMock");
         XposedBridge.hookAllMethods(LocationManager.class, "getLastKnownLocation", new XC_MethodHook() {
             @Override protected void beforeHookedMethod(MethodHookParam param) {
                 if (active() && providerSupported(param.args)) param.setResult(point(provider(param.args)));
@@ -138,17 +140,21 @@ public final class LocationHook implements IXposedHookLoadPackage {
                 && (c.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
                 || c.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED);
     }
+    private static void hookMockFlag(String method) {
+        // hookAllMethods returns an empty set on Android versions without this API.
+        XposedBridge.hookAllMethods(Location.class, method, new XC_MethodHook() {
+            @Override protected void beforeHookedMethod(MethodHookParam param) {
+                if (active()) param.setResult(false);
+            }
+        });
+    }
     private static Location point(String provider) {
         Coordinates c = config;
         Location point = new Location(provider);
         point.setLongitude(c.longitude); point.setLatitude(c.latitude);
         point.setAccuracy(5f); point.setAltitude(0d); point.setSpeed(0f); point.setBearing(0f);
         point.setTime(System.currentTimeMillis()); point.setElapsedRealtimeNanos(SystemClock.elapsedRealtimeNanos());
-        try { XposedHelpers.callMethod(point, "setMock", true); }
-        catch (Throwable ignored) {
-            try { XposedHelpers.callMethod(point, "setIsFromMockProvider", true); }
-            catch (Throwable e) { XposedBridge.log("GPS XP: cannot mark simulated Location: " + e); }
-        }
+        // A fresh Location has no mock flag; do not add one to generated fixes.
         return point;
     }
     private static boolean providerSupported(Object[] args) {

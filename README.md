@@ -29,7 +29,7 @@ Android Xposed / LSPosed 固定定位模块，最低 Android 8.0（API 26）。�
 - `requestLocationUpdates()` / `requestSingleUpdate()` 的 LocationListener 重载：生成回调，支持 Handler / Looper / Executor；固定位置更新最短 1 秒，尊重更长的请求间隔、正的距离阈值、LocationRequest 的最大次数和有效时长。
 - `removeUpdates(LocationListener)`：停止并清理相应监听，已排队但尚未开始的回调也会跳过。
 - Android 11+ `getCurrentLocation()`：通过应用传入的 Executor 回调，尊重 CancellationSignal。
-- 生成的位置含当前系统时间、单调时钟、5 米精度、0 海拔、0 速度和模拟位置标记。不修改 `isMock()` / `isFromMockProvider()`，不隐藏框架。
+- 生成的位置含当前系统时间、单调时钟、5 米精度、0 海拔、0 速度，不设置模拟位置标记。模块生效时，作用域应用内的 `Location.isMock()` / `isFromMockProvider()` 返回 `false`；关闭开关并重启目标应用后恢复原始行为。不会隐藏 Xposed 框架或修改应用的其他检测接口。
 - 不拦截 PendingIntent 定位注册，不模拟卫星/NMEA/地理围栏、Wi-Fi、基站或 IP；Google Play Services、百度、高德等 SDK 的独立定位实现不保证覆盖。如果它们返回 Android Location，并在当前进程读取上述 getter，经纬度替换可能有效，但不能保证它们主动产生回调。
 - 不修改系统定位服务、定位开关或权限。仅在目标应用已经拥有定位权限时启用替换。合成回调运行于目标应用进程，未提供后台定位调度保证。
 
@@ -74,6 +74,8 @@ Android Studio 可直接打开本项目。或使用 Gradle 8.13：
 - `tests/EntryLoadCheck.java` 通过：Xposed 入口在没有 Android Looper 的环境中可以完成静态初始化。
 - Gradle wrapper 已生成；本机 Gradle 的 Android 插件依赖下载未完成，因此本次未运行 Gradle lint，交付 APK 来自上述独立 SDK 构建脚本。
 
-已在小米 8 / Android 10 / LSPosed 1.9.2（7024）上完成真机验证：模块识别及加载、配置读取、GPS/网络最后位置、单次定位、连续定位、取消监听，以及关闭开关并重启后的原始接口恢复均通过。返回的默认经纬度与输入完全一致，生成的位置保留 `mock=true` 标记。
+已在小米 8 / Android 10 / LSPosed 1.9.2（7024）上完成真机验证：模块识别及加载、配置读取、GPS/网络最后位置、单次定位、连续定位、取消监听，以及关闭开关并重启后的原始接口恢复均通过。返回的默认经纬度与输入完全一致。
+
+v1.0.1 去除了 v1.0.0 中设置的模拟位置标记。真机验证中，最后位置、单次定位和连续定位均返回 `mock=false`；预先标记为模拟位置的测试对象在作用域应用内也返回 `false`。关闭开关、保存并重启后，该测试对象恢复返回 `true`。Android 12+ 的 `isMock()` 分支尚未真机验证。
 
 验证使用独立测试应用。Android 11+ getCurrentLocation、其他系统版本和第三方地图 SDK 尚未实测。
